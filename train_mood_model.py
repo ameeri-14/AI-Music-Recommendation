@@ -1,8 +1,9 @@
 """
-AI Music Mood Classification - Model Training
-------------------------------------------------
-Trains a Random Forest classifier to predict song mood:
-Calm, Happy, Sad, Energetic
+AI Music Mood Classification - Model Training (Calm + Happy Merged)
+----------------------------------------------------------------------
+Trains a Random Forest classifier to predict song mood.
+Calm and Happy are combined into a single class: Calm_Happy.
+Final classes: Calm_Happy, Sad, Energetic
 
 Outputs:
 - Training accuracy
@@ -34,22 +35,16 @@ import joblib
 # 1. SET FOLDER PATH
 # ============================================================
 
-# Folder tempat train_mood_model.py berada
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-
-# CSV berada dalam folder yang sama dengan Python file
 DATA_PATH = os.path.join(
     BASE_DIR,
     "music_mood_dataset.csv"
 )
-
-# Folder output
 OUTPUT_DIR = os.path.join(
     BASE_DIR,
     "outputs"
 )
 
-# Create outputs folder automatically
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 
@@ -65,8 +60,8 @@ print("\nDataset path:")
 print(DATA_PATH)
 
 if not os.path.exists(DATA_PATH):
-    print("\nERROR: Dataset tidak dijumpai!")
-    print("\nPastikan file CSV berada di:")
+    print("\nERROR: Dataset not found!")
+    print("\nPlease make sure the CSV file is located at:")
     print(DATA_PATH)
     exit()
 
@@ -82,12 +77,29 @@ df = pd.read_csv(DATA_PATH)
 print("Dataset loaded successfully!")
 print("Dataset shape:", df.shape)
 
-print("\nMood class distribution:")
+print("\nOriginal mood class distribution:")
 print(df["Mood"].value_counts())
 
 
 # ============================================================
-# 4. SELECT FEATURES
+# 4. MERGE CALM + HAPPY INTO ONE CLASS
+# ============================================================
+
+MOOD_MAP = {
+    "Calm": "Calm_Happy",
+    "Happy": "Calm_Happy",
+    "Sad": "Sad",
+    "Energetic": "Energetic",
+}
+
+df["Mood"] = df["Mood"].map(MOOD_MAP)
+
+print("\nMood class distribution after merging Calm + Happy:")
+print(df["Mood"].value_counts())
+
+
+# ============================================================
+# 5. SELECT FEATURES
 # ============================================================
 
 FEATURES = [
@@ -104,7 +116,7 @@ TARGET = "Mood"
 
 
 # ============================================================
-# 5. CHECK REQUIRED COLUMNS
+# 6. CHECK REQUIRED COLUMNS
 # ============================================================
 
 required_columns = FEATURES + [TARGET]
@@ -116,19 +128,19 @@ missing_columns = [
 ]
 
 if missing_columns:
-    print("\nERROR: Column berikut tidak dijumpai:")
-    
+    print("\nERROR: The following columns are missing:")
+
     for column in missing_columns:
         print("-", column)
 
-    print("\nColumn yang ada dalam dataset:")
+    print("\nColumns in the dataset:")
     print(df.columns.tolist())
 
     exit()
 
 
 # ============================================================
-# 6. REMOVE MISSING VALUES
+# 7. REMOVE MISSING VALUES
 # ============================================================
 
 df = df.dropna(
@@ -140,7 +152,7 @@ print(df.shape)
 
 
 # ============================================================
-# 7. CREATE FEATURES AND TARGET
+# 8. CREATE FEATURES AND TARGET
 # ============================================================
 
 X = df[FEATURES]
@@ -157,7 +169,7 @@ print(sorted(y.unique()))
 
 
 # ============================================================
-# 8. TRAIN / VALIDATION SPLIT
+# 9. TRAIN / VALIDATION SPLIT
 # ============================================================
 
 X_train, X_val, y_train, y_val = train_test_split(
@@ -176,7 +188,7 @@ print(X_val.shape[0])
 
 
 # ============================================================
-# 9. TRAIN RANDOM FOREST MODEL
+# 10. TRAIN RANDOM FOREST MODEL
 # ============================================================
 
 print("\nTraining Random Forest...")
@@ -198,7 +210,7 @@ print("Model training completed!")
 
 
 # ============================================================
-# 10. TRAINING ACCURACY
+# 11. TRAINING ACCURACY
 # ============================================================
 
 train_preds = model.predict(X_train)
@@ -213,7 +225,7 @@ print(f"{train_accuracy:.4f}")
 
 
 # ============================================================
-# 11. VALIDATION ACCURACY
+# 12. VALIDATION ACCURACY
 # ============================================================
 
 val_preds = model.predict(X_val)
@@ -228,7 +240,7 @@ print(f"{val_accuracy:.4f}")
 
 
 # ============================================================
-# 12. CLASSIFICATION REPORT
+# 13. CLASSIFICATION REPORT
 # ============================================================
 
 print("\n" + "=" * 60)
@@ -244,7 +256,7 @@ print(
 
 
 # ============================================================
-# 13. CONFUSION MATRIX
+# 14. CONFUSION MATRIX
 # ============================================================
 
 labels = sorted(y.unique())
@@ -269,7 +281,7 @@ print(cm_df)
 
 
 # ============================================================
-# 14. SAVE CONFUSION MATRIX
+# 15. SAVE CONFUSION MATRIX
 # ============================================================
 
 fig, ax = plt.subplots(
@@ -296,7 +308,7 @@ plt.tight_layout()
 
 confusion_matrix_path = os.path.join(
     OUTPUT_DIR,
-    "confusion_matrix.png"
+    "confusion_matrix_merged.png"
 )
 
 plt.savefig(
@@ -311,7 +323,7 @@ print(confusion_matrix_path)
 
 
 # ============================================================
-# 15. FEATURE IMPORTANCE
+# 16. FEATURE IMPORTANCE
 # ============================================================
 
 importances = pd.Series(
@@ -329,7 +341,7 @@ print(importances)
 
 
 # ============================================================
-# 16. SAVE FEATURE IMPORTANCE GRAPH
+# 17. SAVE FEATURE IMPORTANCE GRAPH
 # ============================================================
 
 fig2, ax2 = plt.subplots(
@@ -354,7 +366,7 @@ plt.tight_layout()
 
 feature_importance_path = os.path.join(
     OUTPUT_DIR,
-    "feature_importance.png"
+    "feature_importance_merged.png"
 )
 
 plt.savefig(
@@ -369,12 +381,12 @@ print(feature_importance_path)
 
 
 # ============================================================
-# 17. SAVE TRAINED MODEL
+# 18. SAVE TRAINED MODEL
 # ============================================================
 
 model_path = os.path.join(
     OUTPUT_DIR,
-    "mood_model.pkl"
+    "mood_model_merged.pkl"
 )
 
 joblib.dump(
@@ -388,7 +400,7 @@ print(model_path)
 
 
 # ============================================================
-# 18. FINAL SUMMARY
+# 19. FINAL SUMMARY
 # ============================================================
 
 print("\n")
@@ -405,8 +417,8 @@ print(
 )
 
 print("\nOutput files:")
-print("- confusion_matrix.png")
-print("- feature_importance.png")
-print("- mood_model.pkl")
+print("- confusion_matrix_merged.png")
+print("- feature_importance_merged.png")
+print("- mood_model_merged.pkl")
 
 print("\nTraining completed successfully!")
