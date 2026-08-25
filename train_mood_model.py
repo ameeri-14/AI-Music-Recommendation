@@ -176,25 +176,116 @@ print(X_val.shape[0])
 
 
 # ============================================================
-# 9. TRAIN RANDOM FOREST MODEL
+# 9. RANDOM FOREST TREE NUMBER EXPERIMENT
 # ============================================================
 
-print("\nTraining Random Forest...")
+print("\nTesting different number of trees...")
 
-model = RandomForestClassifier(
-    n_estimators=150,
-    max_depth=18,
-    min_samples_leaf=5,
-    random_state=42,
-    n_jobs=-1,
-)
+tree_numbers = [10, 50, 100, 150, 200, 300]
 
-model.fit(
-    X_train,
-    y_train
-)
+tree_results = []
 
-print("Model training completed!")
+models = {}
+
+
+for trees in tree_numbers:
+
+    print(f"\nTraining Random Forest with {trees} trees...")
+
+
+    rf_model = RandomForestClassifier(
+
+        n_estimators=trees,
+
+        max_depth=18,
+
+        min_samples_leaf=5,
+
+        random_state=42,
+
+        n_jobs=-1,
+
+    )
+
+
+    rf_model.fit(
+
+        X_train,
+
+        y_train
+
+    )
+
+
+    train_prediction = rf_model.predict(X_train)
+
+    val_prediction = rf_model.predict(X_val)
+
+
+    train_accuracy = accuracy_score(
+
+        y_train,
+
+        train_prediction
+
+    )
+
+
+    val_accuracy = accuracy_score(
+
+        y_val,
+
+        val_prediction
+
+    )
+
+
+    tree_results.append({
+
+        "Number of Trees": trees,
+
+        "Training Accuracy": train_accuracy,
+
+        "Validation Accuracy": val_accuracy
+
+    })
+
+
+    models[trees] = rf_model
+
+
+
+results_df = pd.DataFrame(tree_results)
+
+
+print("\nTree Experiment Results:")
+
+print(results_df)
+
+
+
+# Select best number of trees based on validation accuracy
+
+best_tree_number = results_df.loc[
+
+    results_df["Validation Accuracy"].idxmax(),
+
+    "Number of Trees"
+
+]
+
+
+print("\nBest Number of Trees:")
+
+print(best_tree_number)
+
+
+
+# Use best model for remaining evaluation
+
+model = models[best_tree_number]
+
+print("\nBest Random Forest model selected!")
 
 
 # ============================================================
